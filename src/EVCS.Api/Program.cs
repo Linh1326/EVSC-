@@ -29,6 +29,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "EVCS API", Version = "v1" });
+    c.CustomSchemaIds(type => type.FullName?.Replace("+", "_") ?? type.Name);
 });
 
 builder.Services.AddApplication();
