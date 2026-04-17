@@ -39,6 +39,20 @@ public sealed class StationRepository : IStationRepository
     public Task<Station?> GetByCodeAsync(string code, CancellationToken cancellationToken)
         => _context.Stations.FirstOrDefaultAsync(x => x.Code == code, cancellationToken);
 
+    public async Task<string> GetNextCodeAsync(CancellationToken cancellationToken)
+    {
+        var codes = await _context.Stations
+            .Select(s => s.Code)
+            .ToListAsync(cancellationToken);
+
+        var maxNum = codes
+            .Select(c => { var m = System.Text.RegularExpressions.Regex.Match(c, @"^ST(\d+)$"); return m.Success ? int.Parse(m.Groups[1].Value) : 0; })
+            .DefaultIfEmpty(0)
+            .Max();
+
+        return $"ST{(maxNum + 1):D3}";
+    }
+
     public Task<bool> ExistsByNameAsync(string name, int? excludeId, CancellationToken cancellationToken)
     {
         var normalized = name.Trim().ToLower();

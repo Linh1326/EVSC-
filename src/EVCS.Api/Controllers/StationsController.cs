@@ -68,8 +68,9 @@ public class StationsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] FrontendStationRequest request, CancellationToken cancellationToken)
     {
+        var code = await _stationRepo.GetNextCodeAsync(cancellationToken);
         var req = new CreateStationRequest(
-            Code: GenerateCode(),
+            Code: code,
             Name: request.Name ?? "",
             Address: request.Address ?? "",
             Area: null,
@@ -188,7 +189,7 @@ public class StationsController : ControllerBase
     };
 
     private static string GenerateCode()
-        => $"ST{DateTime.Now:yyyyMMddHHmmss}";
+        => $"ST{DateTime.UtcNow:yyyyMMddHHmmss}";
 
     private static object ToFrontend(StationSummaryDto s) => new
     {
