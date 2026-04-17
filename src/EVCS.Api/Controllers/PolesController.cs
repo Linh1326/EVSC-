@@ -156,11 +156,4 @@ public class PolesController : ControllerBase
         var s = status is PoleStatus.Inactive or PoleStatus.Fault ? "Inactive" : "Available";
         return Enumerable.Range(1, Math.Max(1, count)).Select(i => $"Connector {i} / {s}").ToArray();
     }
-
-    public record FrontendPoleRequest(
-        string? Id, string? Name, string? ActiveCode, string? Manufacturer,
-        string? Model, string? StationId, string? InstalledAt, string? Status,
-        string[]? Connectors);
-
-    public record SetStatusRequest(string? Status);
 }

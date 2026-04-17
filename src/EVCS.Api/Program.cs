@@ -38,7 +38,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
-// Always enable Swagger (needed for Railway)
+// Always enable Swagger
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {

@@ -219,10 +219,4 @@ public class StationsController : ControllerBase
         StationStatus.Error => "Error",
         _ => "Inactive"
     };
-
-    public record FrontendStationRequest(
-        string? Name, string? Address, string? Latitude, string? Longitude,
-        string? Status, string? OperationTime, object[]? Connectors);
-
-    public record SetStatusRequest(string? Status);
 }
