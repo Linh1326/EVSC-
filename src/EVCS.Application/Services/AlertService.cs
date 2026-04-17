@@ -1,4 +1,4 @@
-﻿using EVCS.Application.Abstractions.Persistence;
+using EVCS.Application.Abstractions.Persistence;
 using EVCS.Application.Abstractions.Services;
 using EVCS.Application.Common;
 using EVCS.Application.DTOs;
@@ -37,17 +37,17 @@ public sealed class AlertService : IAlertService
 
     public async Task<AlertSummaryDto> CreateAsync(CreateAlertRequest request, CancellationToken cancellationToken)
     {
-        ValidationGuard.AgainstNullOrWhiteSpace(request.AlertType, "Loại cảnh báo không được để trống.");
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Message, "Nội dung cảnh báo không được để trống.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.AlertType, "Lo?i c?nh b�o kh�ng du?c d? tr?ng.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Message, "N?i dung c?nh b�o kh�ng du?c d? tr?ng.");
 
         var station = await _stationRepository.GetByIdAsync(request.StationId, includeChildren: false, cancellationToken)
-            ?? throw new AppException("Không tìm thấy trạm sạc.", 404);
+            ?? throw new AppException("Kh�ng t�m th?y tr?m s?c.", 404);
 
         if (request.PoleId.HasValue)
         {
             var pole = await _poleRepository.GetByIdAsync(request.PoleId.Value, includeChildren: false, cancellationToken)
-                ?? throw new AppException("Không tìm thấy trụ sạc.", 404);
-            ValidationGuard.Against(pole.StationId != station.Id, "Trụ sạc không thuộc trạm đã chọn.");
+                ?? throw new AppException("Kh�ng t�m th?y tr? s?c.", 404);
+            ValidationGuard.Against(pole.StationId != station.Id, "Tr? s?c kh�ng thu?c tr?m d� ch?n.");
         }
 
         var alert = new Alert
@@ -57,30 +57,30 @@ public sealed class AlertService : IAlertService
             AlertType = request.AlertType.Trim(),
             Severity = request.Severity,
             Message = request.Message.Trim(),
-            OccurredAt = request.OccurredAt ?? DateTime.Now,
+            OccurredAt = request.OccurredAt ?? DateTime.UtcNow,
             Status = AlertStatus.New,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
 
         await _alertRepository.AddAsync(alert, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var saved = await _alertRepository.GetByIdAsync(alert.Id, cancellationToken)
-            ?? throw new AppException("Không thể lấy dữ liệu cảnh báo vừa tạo.", 500);
+            ?? throw new AppException("Kh�ng th? l?y d? li?u c?nh b�o v?a t?o.", 500);
         return Map(saved);
     }
 
     public async Task<AlertSummaryDto> ProcessAsync(long id, ProcessAlertRequest request, CancellationToken cancellationToken)
     {
         var alert = await _alertRepository.GetByIdAsync((int)id, cancellationToken)
-            ?? throw new AppException("Không tìm thấy cảnh báo.", 404);
+            ?? throw new AppException("Kh�ng t�m th?y c?nh b�o.", 404);
 
         alert.Status = request.Status;
         alert.Note = request.Note?.Trim();
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var updated = await _alertRepository.GetByIdAsync(alert.Id, cancellationToken)
-            ?? throw new AppException("Không thể cập nhật cảnh báo.", 500);
+            ?? throw new AppException("Kh�ng th? c?p nh?t c?nh b�o.", 500);
         return Map(updated);
     }
 

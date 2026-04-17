@@ -1,4 +1,4 @@
-﻿using EVCS.Application.Abstractions.Persistence;
+using EVCS.Application.Abstractions.Persistence;
 using EVCS.Application.Abstractions.Services;
 using EVCS.Application.Common;
 using EVCS.Application.DTOs;
@@ -29,20 +29,20 @@ public sealed class PoleService : IPoleService
     public async Task<PoleSummaryDto> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
         var pole = await _poleRepository.GetByIdAsync(id, includeChildren: true, cancellationToken)
-            ?? throw new AppException("Không tìm thấy trụ sạc.", 404);
+            ?? throw new AppException("Kh�ng t�m th?y tr? s?c.", 404);
         return Map(pole);
     }
 
     public async Task<PoleSummaryDto> CreateAsync(CreatePoleRequest request, CancellationToken cancellationToken)
     {
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Name, "Tên trụ sạc không được để trống.");
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Code, "Mã trụ không được để trống.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Name, "T�n tr? s?c kh�ng du?c d? tr?ng.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Code, "M� tr? kh�ng du?c d? tr?ng.");
 
         var station = await _stationRepository.GetByIdAsync(request.StationId, includeChildren: false, cancellationToken)
-            ?? throw new AppException("Không tìm thấy trạm sạc.", 404);
+            ?? throw new AppException("Kh�ng t�m th?y tr?m s?c.", 404);
 
         var existed = await _poleRepository.ExistsByCodeAsync(request.Code.Trim(), null, cancellationToken);
-        ValidationGuard.Against(existed, "Mã trụ đã tồn tại.");
+        ValidationGuard.Against(existed, "M� tr? d� t?n t?i.");
 
         var pole = new Pole
         {
@@ -54,8 +54,8 @@ public sealed class PoleService : IPoleService
             NumberOfPorts = request.NumberOfPorts > 0 ? request.NumberOfPorts : 1,
             Status = request.Status ?? PoleStatus.Available,
             InstalledAt = request.InstalledAt,
-            CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         await _poleRepository.AddAsync(pole, cancellationToken);
@@ -66,16 +66,16 @@ public sealed class PoleService : IPoleService
     public async Task<PoleSummaryDto> UpdateAsync(int id, UpdatePoleRequest request, CancellationToken cancellationToken)
     {
         var pole = await _poleRepository.GetByIdAsync(id, includeChildren: false, cancellationToken)
-            ?? throw new AppException("Không tìm thấy trụ sạc.", 404);
+            ?? throw new AppException("Kh�ng t�m th?y tr? s?c.", 404);
 
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Name, "Tên trụ sạc không được để trống.");
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Code, "Mã trụ không được để trống.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Name, "T�n tr? s?c kh�ng du?c d? tr?ng.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Code, "M� tr? kh�ng du?c d? tr?ng.");
 
         var station = await _stationRepository.GetByIdAsync(request.StationId, includeChildren: false, cancellationToken)
-            ?? throw new AppException("Không tìm thấy trạm sạc.", 404);
+            ?? throw new AppException("Kh�ng t�m th?y tr?m s?c.", 404);
 
         var existed = await _poleRepository.ExistsByCodeAsync(request.Code.Trim(), id, cancellationToken);
-        ValidationGuard.Against(existed, "Mã trụ đã tồn tại.");
+        ValidationGuard.Against(existed, "M� tr? d� t?n t?i.");
 
         pole.Name = request.Name.Trim();
         pole.Code = request.Code.Trim();
@@ -85,7 +85,7 @@ public sealed class PoleService : IPoleService
         pole.StationId = station.Id;
         pole.Status = request.Status;
         pole.InstalledAt = request.InstalledAt;
-        pole.UpdatedAt = DateTime.Now;
+        pole.UpdatedAt = DateTime.UtcNow;
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return await GetByIdAsync(id, cancellationToken);
@@ -94,7 +94,7 @@ public sealed class PoleService : IPoleService
     public async Task DeleteAsync(int id, CancellationToken cancellationToken)
     {
         var pole = await _poleRepository.GetByIdAsync(id, includeChildren: false, cancellationToken)
-            ?? throw new AppException("Không tìm thấy trụ sạc.", 404);
+            ?? throw new AppException("Kh�ng t�m th?y tr? s?c.", 404);
         _poleRepository.Remove(pole);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -102,9 +102,9 @@ public sealed class PoleService : IPoleService
     public async Task<PoleSummaryDto> DeactivateAsync(int id, CancellationToken cancellationToken)
     {
         var pole = await _poleRepository.GetByIdAsync(id, includeChildren: false, cancellationToken)
-            ?? throw new AppException("Không tìm thấy trụ sạc.", 404);
+            ?? throw new AppException("Kh�ng t�m th?y tr? s?c.", 404);
         pole.Status = PoleStatus.Inactive;
-        pole.UpdatedAt = DateTime.Now;
+        pole.UpdatedAt = DateTime.UtcNow;
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return await GetByIdAsync(id, cancellationToken);
     }
@@ -112,9 +112,9 @@ public sealed class PoleService : IPoleService
     public async Task<PoleSummaryDto> ActivateAsync(int id, CancellationToken cancellationToken)
     {
         var pole = await _poleRepository.GetByIdAsync(id, includeChildren: false, cancellationToken)
-            ?? throw new AppException("Không tìm thấy trụ sạc.", 404);
+            ?? throw new AppException("Kh�ng t�m th?y tr? s?c.", 404);
         pole.Status = PoleStatus.Available;
-        pole.UpdatedAt = DateTime.Now;
+        pole.UpdatedAt = DateTime.UtcNow;
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return await GetByIdAsync(id, cancellationToken);
     }

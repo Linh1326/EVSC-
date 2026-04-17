@@ -1,4 +1,4 @@
-﻿using EVCS.Application.Abstractions.Persistence;
+using EVCS.Application.Abstractions.Persistence;
 using EVCS.Application.Abstractions.Services;
 using EVCS.Application.Common;
 using EVCS.Application.DTOs;
@@ -29,18 +29,18 @@ public sealed class StationService : IStationService
     public async Task<StationDetailDto> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
         var station = await _stationRepository.GetByIdAsync(id, includeChildren: true, cancellationToken)
-            ?? throw new AppException("Không tìm thấy trạm sạc.", 404);
+            ?? throw new AppException("Kh�ng t�m th?y tr?m s?c.", 404);
         return MapDetail(station);
     }
 
     public async Task<StationDetailDto> CreateAsync(CreateStationRequest request, CancellationToken cancellationToken)
     {
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Name, "Tên trạm sạc không được để trống.");
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Code, "Mã trạm không được để trống.");
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Address, "Địa chỉ không được để trống.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Name, "T�n tr?m s?c kh�ng du?c d? tr?ng.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Code, "M� tr?m kh�ng du?c d? tr?ng.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Address, "�?a ch? kh�ng du?c d? tr?ng.");
 
         var existed = await _stationRepository.ExistsByNameAsync(request.Name.Trim(), null, cancellationToken);
-        ValidationGuard.Against(existed, "Tên trạm sạc đã tồn tại.");
+        ValidationGuard.Against(existed, "T�n tr?m s?c d� t?n t?i.");
 
         var station = new Station
         {
@@ -52,8 +52,8 @@ public sealed class StationService : IStationService
             Longitude = request.Longitude,
             Status = request.Status ?? StationStatus.Active,
             OperatingHours = request.OperatingHours?.Trim(),
-            CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         await _stationRepository.AddAsync(station, cancellationToken);
@@ -64,13 +64,13 @@ public sealed class StationService : IStationService
     public async Task<StationDetailDto> UpdateAsync(int id, UpdateStationRequest request, CancellationToken cancellationToken)
     {
         var station = await _stationRepository.GetByIdAsync(id, includeChildren: true, cancellationToken)
-            ?? throw new AppException("Không tìm thấy trạm sạc.", 404);
+            ?? throw new AppException("Kh�ng t�m th?y tr?m s?c.", 404);
 
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Name, "Tên trạm sạc không được để trống.");
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Address, "Địa chỉ không được để trống.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Name, "T�n tr?m s?c kh�ng du?c d? tr?ng.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Address, "�?a ch? kh�ng du?c d? tr?ng.");
 
         var existed = await _stationRepository.ExistsByNameAsync(request.Name.Trim(), id, cancellationToken);
-        ValidationGuard.Against(existed, "Tên trạm sạc đã tồn tại.");
+        ValidationGuard.Against(existed, "T�n tr?m s?c d� t?n t?i.");
 
         station.Name = request.Name.Trim();
         station.Address = request.Address.Trim();
@@ -79,7 +79,7 @@ public sealed class StationService : IStationService
         station.Longitude = request.Longitude;
         station.Status = request.Status;
         station.OperatingHours = request.OperatingHours?.Trim();
-        station.UpdatedAt = DateTime.Now;
+        station.UpdatedAt = DateTime.UtcNow;
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return await GetByIdAsync(id, cancellationToken);
@@ -88,10 +88,10 @@ public sealed class StationService : IStationService
     public async Task DeleteAsync(int id, CancellationToken cancellationToken)
     {
         var station = await _stationRepository.GetByIdAsync(id, includeChildren: false, cancellationToken)
-            ?? throw new AppException("Không tìm thấy trạm sạc.", 404);
+            ?? throw new AppException("Kh�ng t�m th?y tr?m s?c.", 404);
 
         var hasActivePole = await _poleRepository.ExistsActiveByStationIdAsync(id, cancellationToken);
-        ValidationGuard.Against(hasActivePole, "Không thể xóa trạm đang có trụ hoạt động.");
+        ValidationGuard.Against(hasActivePole, "Kh�ng th? x�a tr?m dang c� tr? ho?t d?ng.");
 
         _stationRepository.Remove(station);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -100,10 +100,10 @@ public sealed class StationService : IStationService
     public async Task<StationDetailDto> DeactivateAsync(int id, CancellationToken cancellationToken)
     {
         var station = await _stationRepository.GetByIdAsync(id, includeChildren: false, cancellationToken)
-            ?? throw new AppException("Không tìm thấy trạm sạc.", 404);
+            ?? throw new AppException("Kh�ng t�m th?y tr?m s?c.", 404);
 
         station.Status = StationStatus.Inactive;
-        station.UpdatedAt = DateTime.Now;
+        station.UpdatedAt = DateTime.UtcNow;
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return await GetByIdAsync(id, cancellationToken);
@@ -112,10 +112,10 @@ public sealed class StationService : IStationService
     public async Task<StationDetailDto> ActivateAsync(int id, CancellationToken cancellationToken)
     {
         var station = await _stationRepository.GetByIdAsync(id, includeChildren: false, cancellationToken)
-            ?? throw new AppException("Không tìm thấy trạm sạc.", 404);
+            ?? throw new AppException("Kh�ng t�m th?y tr?m s?c.", 404);
 
         station.Status = StationStatus.Active;
-        station.UpdatedAt = DateTime.Now;
+        station.UpdatedAt = DateTime.UtcNow;
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return await GetByIdAsync(id, cancellationToken);
