@@ -2162,7 +2162,9 @@ function formatHistoryStatus(status) {
 }
 
 function formatHistoryDateTime(value) {
+  if (!value) return "—";
   const date = new Date(value);
+  if (isNaN(date.getTime()) || date.getFullYear() < 2000) return "—";
   return date.toLocaleString("en-GB", {
     day: "2-digit",
     month: "2-digit",
