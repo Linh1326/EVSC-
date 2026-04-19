@@ -639,7 +639,7 @@ function openPoleForm(pole = null) {
   if (els.poleFormId) els.poleFormId.value = draftId;
   if (els.poleFormName) els.poleFormName.value = pole ? pole.name : "";
   if (els.poleFormActiveCode) els.poleFormActiveCode.value = pole ? pole.activeCode : draftId;
-  if (els.poleFormCreateQrBtn) els.poleFormCreateQrBtn.textContent = pole ? "See QR Code" : "+ Create new QR Code";
+  if (els.poleFormCreateQrBtn) els.poleFormCreateQrBtn.textContent = pole ? "See Code" : "Generate Code";
   if (els.poleFormManufacturer) els.poleFormManufacturer.value = pole ? pole.manufacturer : "";
   if (els.poleFormModel) els.poleFormModel.value = pole ? pole.model : "";
   setStationOptions(pole ? pole.stationId : "");
@@ -927,8 +927,9 @@ function bindEvents() {
   if (els.poleFormCreateQrBtn) {
     els.poleFormCreateQrBtn.addEventListener("click", () => {
       if (!els.poleFormActiveCode) return;
-      const value = state.isEditMode && state.editingPoleId ? state.editingPoleId : nextPoleId();
-      els.poleFormActiveCode.value = value;
+      // Generate random 5-digit code
+      const randomCode = String(Math.floor(10000 + Math.random() * 90000));
+      els.poleFormActiveCode.value = randomCode;
     });
   }
 
