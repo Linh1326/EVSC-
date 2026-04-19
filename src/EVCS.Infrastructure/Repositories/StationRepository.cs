@@ -25,7 +25,7 @@ public sealed class StationRepository : IStationRepository
         if (status.HasValue)
             query = query.Where(x => x.Status == status.Value);
 
-        return query.OrderByDescending(x => x.CreatedAt).ToListAsync(cancellationToken);
+        return query.OrderBy(x => x.Code).ToListAsync(cancellationToken);
     }
 
     public Task<Station?> GetByIdAsync(int id, bool includeChildren, CancellationToken cancellationToken)

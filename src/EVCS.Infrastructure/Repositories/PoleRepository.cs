@@ -28,7 +28,7 @@ public sealed class PoleRepository : IPoleRepository
         if (status.HasValue)
             query = query.Where(x => x.Status == status.Value);
 
-        return query.OrderByDescending(x => x.CreatedAt).ToListAsync(cancellationToken);
+        return query.OrderBy(x => x.Code).ToListAsync(cancellationToken);
     }
 
     public Task<Pole?> GetByIdAsync(int id, bool includeChildren, CancellationToken cancellationToken)
