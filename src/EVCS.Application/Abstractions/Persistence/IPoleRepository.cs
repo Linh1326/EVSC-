@@ -10,7 +10,6 @@ public interface IPoleRepository
     Task<string> GetNextCodeAsync(CancellationToken cancellationToken);
     Task<bool> ExistsByCodeAsync(string code, int? excludeId, CancellationToken cancellationToken);
     Task<bool> ExistsActiveByStationIdAsync(int stationId, CancellationToken cancellationToken);
-    Task<string> GetNextCodeAsync(CancellationToken cancellationToken);
     Task AddAsync(Pole pole, CancellationToken cancellationToken);
     void Remove(Pole pole);
 }
