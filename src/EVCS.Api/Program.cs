@@ -3,6 +3,9 @@ using EVCS.Application;
 using EVCS.Infrastructure;
 using System.Text.Json.Serialization;
 
+// Fix: allow Npgsql to accept Local/Unspecified DateTime
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();

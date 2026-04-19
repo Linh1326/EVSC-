@@ -15,10 +15,7 @@ public static class DependencyInjection
             ?? throw new InvalidOperationException("Thiếu cấu hình ConnectionStrings:DefaultConnection.");
 
         services.AddDbContext<AppDbContext>(options =>
-        {
-            options.UseNpgsql(connectionString, npgsql =>
-                npgsql.EnableLegacyTimestampBehavior());
-        });
+            options.UseNpgsql(connectionString));
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
         services.AddScoped<IStationRepository, StationRepository>();
