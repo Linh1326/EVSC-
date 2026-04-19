@@ -1,7 +1,6 @@
 ﻿using EVCS.Api.Contracts;
 using EVCS.Application.Abstractions.Persistence;
 using EVCS.Application.Abstractions.Services;
-using EVCS.Application.DTOs;
 using EVCS.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,11 +12,13 @@ public class PolesController : ControllerBase
 {
     private readonly IPoleService _poleService;
     private readonly IStationRepository _stationRepo;
+    private readonly IPoleRepository _poleRepo;
 
-    public PolesController(IPoleService poleService, IStationRepository stationRepo)
+    public PolesController(IPoleService poleService, IStationRepository stationRepo, IPoleRepository poleRepo)
     {
         _poleService = poleService;
         _stationRepo = stationRepo;
+        _poleRepo = poleRepo;
     }
 
     [HttpGet]
@@ -55,11 +56,14 @@ public class PolesController : ControllerBase
         if (stationNumericId is null)
             return BadRequest(ApiResponse<object>.Fail("Không tìm thấy trạm sạc."));
 
+        // Always auto-generate code PL031, PL032...
+        var code = await _poleRepo.GetNextCodeAsync(cancellationToken);
+
         var poleStatus = request.Status?.ToLower() is "inactive" ? PoleStatus.Inactive : PoleStatus.Available;
         var req = new CreatePoleRequest(
             stationNumericId.Value,
             request.Name ?? "",
-            request.ActiveCode ?? request.Id ?? "",
+            code,
             request.Model,
             request.Manufacturer,
             request.Connectors?.Length ?? 1,

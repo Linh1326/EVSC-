@@ -39,6 +39,20 @@ public sealed class PoleRepository : IPoleRepository
         return query.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
+    public async Task<string> GetNextCodeAsync(CancellationToken cancellationToken)
+    {
+        var codes = await _context.Poles
+            .Select(p => p.Code)
+            .ToListAsync(cancellationToken);
+
+        var maxNum = codes
+            .Select(c => { var m = System.Text.RegularExpressions.Regex.Match(c, @"^PL(\d+)$"); return m.Success ? int.Parse(m.Groups[1].Value) : 0; })
+            .DefaultIfEmpty(0)
+            .Max();
+
+        return $"PL{(maxNum + 1):D3}";
+    }
+
     public Task<bool> ExistsByCodeAsync(string code, int? excludeId, CancellationToken cancellationToken)
     {
         var normalized = code.Trim().ToLower();
@@ -54,6 +68,16 @@ public sealed class PoleRepository : IPoleRepository
 
     public Task AddAsync(Pole pole, CancellationToken cancellationToken)
         => _context.Poles.AddAsync(pole, cancellationToken).AsTask();
+
+    public async Task<string> GetNextCodeAsync(CancellationToken cancellationToken)
+    {
+        var codes = await _context.Poles.Select(p => p.Code).ToListAsync(cancellationToken);
+        var maxNum = codes
+            .Select(c => { var m = System.Text.RegularExpressions.Regex.Match(c, @"^PL(\d+)$"); return m.Success ? int.Parse(m.Groups[1].Value) : 0; })
+            .DefaultIfEmpty(0)
+            .Max();
+        return $"PL{(maxNum + 1):D3}";
+    }
 
     public void Remove(Pole pole) => _context.Poles.Remove(pole);
 }
