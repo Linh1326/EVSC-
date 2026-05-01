@@ -58,7 +58,7 @@ public sealed class AlertService : IAlertService
             Severity = request.Severity,
             Message = request.Message.Trim(),
             OccurredAt = request.OccurredAt ?? DateTime.UtcNow,
-            Status = AlertStatus.New,
+            Status = AlertStatus.Open,
             CreatedAt = DateTime.UtcNow
         };
 

@@ -1,6 +1,7 @@
 ﻿using EVCS.Application.Abstractions.Persistence;
 using EVCS.Application.DTOs;
 using EVCS.Domain.Entities;
+using EVCS.Domain.Enums;
 using EVCS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,5 +36,22 @@ public sealed class ChargingSessionRepository : IChargingSessionRepository
             query = query.Where(x => x.Status == filter.Status.Value);
 
         return query.OrderByDescending(x => x.StartTime).ToListAsync(cancellationToken);
+    }
+
+    public Task<bool> HasOngoingSessionByStationAsync(int stationId, CancellationToken cancellationToken)
+        => _context.ChargingSessions.AnyAsync(
+            x => x.StationId == stationId && x.Status == SessionStatus.Charging,
+            cancellationToken);
+
+    public Task<bool> HasOngoingSessionByPoleAsync(int poleId, CancellationToken cancellationToken)
+        => _context.ChargingSessions.AnyAsync(
+            x => x.PoleId == poleId && x.Status == SessionStatus.Charging,
+            cancellationToken);
+
+    public async Task DeleteByPoleIdAsync(int poleId, CancellationToken cancellationToken)
+    {
+        await _context.ChargingSessions
+            .Where(s => s.PoleId == poleId)
+            .ExecuteDeleteAsync(cancellationToken);
     }
 }

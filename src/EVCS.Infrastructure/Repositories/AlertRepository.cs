@@ -39,4 +39,11 @@ public sealed class AlertRepository : IAlertRepository
 
     public Task AddAsync(Alert alert, CancellationToken cancellationToken)
         => _context.Alerts.AddAsync(alert, cancellationToken).AsTask();
+
+    public async Task NullifyPoleIdAsync(int poleId, CancellationToken cancellationToken)
+    {
+        await _context.Alerts
+            .Where(a => a.PoleId == poleId)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.PoleId, (int?)null), cancellationToken);
+    }
 }

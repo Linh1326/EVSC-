@@ -8,4 +8,5 @@ public interface IAlertRepository
     Task<List<Alert>> GetListAsync(AlertFilter filter, CancellationToken cancellationToken);
     Task<Alert?> GetByIdAsync(int id, CancellationToken cancellationToken);
     Task AddAsync(Alert alert, CancellationToken cancellationToken);
+    Task NullifyPoleIdAsync(int poleId, CancellationToken cancellationToken);
 }
