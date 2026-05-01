@@ -33,7 +33,7 @@ function updateNotificationBadge() {
 
 function getFilteredAlerts() {
   return getAlerts().filter((alert) => {
-    const matchesQuery = !alertsState.query || [alert.type, alert.stationName, alert.description]
+    const matchesQuery = !alertsState.query || [alert.type, alert.stationName]
       .some((value) => String(value).toLowerCase().includes(alertsState.query));
     const matchesSeverity = alertsState.severity === "all" || alert.severity === alertsState.severity;
     const matchesStatus = alertsState.status === "all" || alert.status === alertsState.status;
