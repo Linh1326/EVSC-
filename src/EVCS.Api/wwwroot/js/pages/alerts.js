@@ -252,6 +252,13 @@ async function initAlertsPage() {
   bindAlertsEvents();
   updateNotificationBadge();
   renderAlertsTable();
+
+  // Auto-refresh badge and table every 30 seconds (TC5.06, TC5.07)
+  setInterval(async () => {
+    await refreshAlertsFromApi();
+    updateNotificationBadge();
+    renderAlertsTable();
+  }, 30000);
 }
 
 void initAlertsPage().catch((err) => {

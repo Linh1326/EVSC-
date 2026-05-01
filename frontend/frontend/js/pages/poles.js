@@ -703,6 +703,15 @@ async function savePoleForm(event) {
     if (existing?.connectors?.length) payload.connectors = [...existing.connectors];
   }
 
+  // TC2.18: Detailed field validation
+  if (!payload.name) { showFormError("Pole Name is required."); return; }
+  if (payload.name.length > 100) { showFormError("Pole Name must not exceed 100 characters."); return; }
+  if (!payload.manufacturer) { showFormError("Manufacturer is required."); return; }
+  if (!payload.model) { showFormError("Model is required."); return; }
+  if (!payload.stationId) { showFormError("Station is required."); return; }
+  if (!payload.installedAt) { showFormError("Installed date is required."); return; }
+  if (!payload.connectors.length) { showFormError("Connector list is required."); return; }
+
   if (!payload.name || !payload.manufacturer || !payload.model || !payload.stationId || !payload.installedAt || !payload.connectors.length) {
     showFormError("Please fill in all required fields.");
     return;

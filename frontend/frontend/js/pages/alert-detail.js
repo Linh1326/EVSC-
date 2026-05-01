@@ -138,7 +138,33 @@ function bindDetailEvents(alertId) {
   }
 
   if (detailEls.resolveBtn) {
-    detailEls.resolveBtn.addEventListener("click", () => {
+    detailEls.resolveBtn.addEventListener("click", async () => {
+      if (detailEls.resolveBtn.disabled) return;
+      detailEls.resolveBtn.disabled = true;
+
+      // Call API to persist resolved status (TC5.31, TC5.32, TC5.33)
+      if (ALERT_DETAIL_API_BASE && alertId) {
+        try {
+          const numericId = alertId.startsWith("ALT-") ? parseInt(alertId.slice(4), 10) : parseInt(alertId, 10);
+          const res = await fetch(`${ALERT_DETAIL_API_BASE}/alerts/${numericId}/process`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify({ status: "Resolved", note: "Marked as resolved by user." })
+          });
+          if (res.ok) {
+            const json = await res.json();
+            const updated = json?.data;
+            if (updated && Array.isArray(apiAlertsCache)) {
+              apiAlertsCache = apiAlertsCache.map((a) =>
+                (a.id === alertId || a.numericId === updated.numericId) ? { ...a, status: "resolved" } : a
+              );
+            }
+          }
+        } catch (err) {
+          console.error("Failed to resolve alert via API:", err);
+        }
+      }
+
       const updated = updateAlert(alertId, (alert) => {
         alert.status = "resolved";
         const nextLogs = Array.isArray(alert.logs) ? [...alert.logs] : [];
@@ -160,7 +186,15 @@ async function initAlertDetailPage() {
   await refreshAlertsFromApi();
   seedAlertsIfNeeded();
   const alertId = getAlertIdFromUrl();
-  const alert = (await fetchAlertDetailFromApi(alertId)) || getAlertById(alertId);
+  // Always fetch fresh from API to get latest status (TC5.31)
+  const apiAlert = await fetchAlertDetailFromApi(alertId);
+  // Sync API status into local cache
+  if (apiAlert && Array.isArray(apiAlertsCache)) {
+    apiAlertsCache = apiAlertsCache.map((a) =>
+      a.id === alertId ? { ...a, status: apiAlert.status } : a
+    );
+  }
+  const alert = apiAlert || getAlertById(alertId);
   bindNotificationBell();
   updateDetailNotificationBadge();
   renderAlertDetail(alert);

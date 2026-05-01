@@ -37,17 +37,17 @@ public sealed class AlertService : IAlertService
 
     public async Task<AlertSummaryDto> CreateAsync(CreateAlertRequest request, CancellationToken cancellationToken)
     {
-        ValidationGuard.AgainstNullOrWhiteSpace(request.AlertType, "Lo?i c?nh báo không du?c d? tr?ng.");
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Message, "N?i dung c?nh báo không du?c d? tr?ng.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.AlertType, "Alert type is required.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Message, "Alert message is required.");
 
         var station = await _stationRepository.GetByIdAsync(request.StationId, includeChildren: false, cancellationToken)
-            ?? throw new AppException("Không tìm th?y tr?m s?c.", 404);
+            ?? throw new AppException("Station not found.", 404);
 
         if (request.PoleId.HasValue)
         {
             var pole = await _poleRepository.GetByIdAsync(request.PoleId.Value, includeChildren: false, cancellationToken)
-                ?? throw new AppException("Không tìm th?y tr? s?c.", 404);
-            ValidationGuard.Against(pole.StationId != station.Id, "Tr? s?c không thu?c tr?m dã ch?n.");
+                ?? throw new AppException("Pole not found.", 404);
+            ValidationGuard.Against(pole.StationId != station.Id, "Pole does not belong to the selected station.");
         }
 
         var alert = new Alert
@@ -66,21 +66,21 @@ public sealed class AlertService : IAlertService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var saved = await _alertRepository.GetByIdAsync(alert.Id, cancellationToken)
-            ?? throw new AppException("Không th? l?y d? li?u c?nh báo v?a t?o.", 500);
+            ?? throw new AppException("Unable to retrieve the created alert.", 500);
         return Map(saved);
     }
 
     public async Task<AlertSummaryDto> ProcessAsync(long id, ProcessAlertRequest request, CancellationToken cancellationToken)
     {
         var alert = await _alertRepository.GetByIdAsync((int)id, cancellationToken)
-            ?? throw new AppException("Không tìm th?y c?nh báo.", 404);
+            ?? throw new AppException("Alert not found.", 404);
 
         alert.Status = request.Status;
         alert.Note = request.Note?.Trim();
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var updated = await _alertRepository.GetByIdAsync(alert.Id, cancellationToken)
-            ?? throw new AppException("Không th? c?p nh?t c?nh báo.", 500);
+            ?? throw new AppException("Unable to update alert.", 500);
         return Map(updated);
     }
 
