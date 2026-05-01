@@ -7,7 +7,7 @@ public class ChargingSession : AuditableEntity
 {
     public int Id { get; set; }
     public int StationId { get; set; }
-    public int PoleId { get; set; }
+    public int? PoleId { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }
     public decimal EnergyKwh { get; set; }

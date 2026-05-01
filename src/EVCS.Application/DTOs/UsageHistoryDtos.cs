@@ -14,7 +14,7 @@ public record UsageHistorySummaryDto(
     int StationId,
     string StationCode,
     string StationName,
-    int PoleId,
+    int? PoleId,
     string? PoleCode,
     DateTime StartTime,
     DateTime? EndTime,
