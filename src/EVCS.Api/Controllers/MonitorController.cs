@@ -35,10 +35,22 @@ public class MonitorController : ControllerBase
 
         var sessionMap = sessionCounts.ToDictionary(x => x.StationId);
 
-        // Build distinct regions from area field
+        // Build distinct regions from area field, fallback to extracting from address
         var regions = stations
-            .Where(s => !string.IsNullOrWhiteSpace(s.Area))
-            .Select(s => s.Area!)
+            .Select(s =>
+            {
+                if (!string.IsNullOrWhiteSpace(s.Area)) return s.Area!.Trim();
+                // Extract last meaningful part of address (e.g. "District 3, HCMC" → "District 3")
+                if (!string.IsNullOrWhiteSpace(s.Address))
+                {
+                    var parts = s.Address.Split(',');
+                    if (parts.Length >= 2)
+                        return parts[parts.Length - 2].Trim();
+                }
+                return null;
+            })
+            .Where(a => !string.IsNullOrWhiteSpace(a))
+            .Select(a => a!)
             .Distinct()
             .OrderBy(a => a)
             .Select(a => new { key = a.ToLower().Replace(" ", "_"), label = a })
@@ -68,8 +80,14 @@ public class MonitorController : ControllerBase
                 numericId = s.Id,
                 name = s.Name,
                 address = s.Address,
-                area = s.Area?.ToLower().Replace(" ", "_") ?? "",
-                areaLabel = s.Area ?? "",
+                area = s.Area?.ToLower().Replace(" ", "_") ?? (
+                    !string.IsNullOrWhiteSpace(s.Address)
+                        ? s.Address.Split(',').ElementAtOrDefault(s.Address.Split(',').Length - 2)?.Trim().ToLower().Replace(" ", "_") ?? ""
+                        : ""),
+                areaLabel = s.Area ?? (
+                    !string.IsNullOrWhiteSpace(s.Address)
+                        ? s.Address.Split(',').ElementAtOrDefault(s.Address.Split(',').Length - 2)?.Trim() ?? ""
+                        : ""),
                 status = monitorStatus,
                 operatingHours = s.OperatingHours ?? "24/7",
                 totalSessions = sess?.Count ?? 0,
