@@ -634,6 +634,10 @@ function openPoleForm(pole = null) {
 
   if (els.poleFormTitle) els.poleFormTitle.textContent = pole ? "Edit" : "Create new";
   if (els.savePoleFormBtn) els.savePoleFormBtn.textContent = pole ? "Update" : "Save";
+
+  // Hide Active Code field when editing (TC: active code should not be editable)
+  const activeCodeField = document.getElementById("poleFormActiveCodeField");
+  if (activeCodeField) activeCodeField.style.display = pole ? "none" : "";
   if (els.poleFormMetaId) els.poleFormMetaId.textContent = `ID: ${draftId}`;
   if (els.poleFormMetaDate) els.poleFormMetaDate.textContent = formatDrawerMetaDate(new Date());
   if (els.poleFormId) els.poleFormId.value = draftId;
