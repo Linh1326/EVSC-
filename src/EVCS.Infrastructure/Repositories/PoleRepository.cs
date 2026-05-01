@@ -65,6 +65,16 @@ public sealed class PoleRepository : IPoleRepository
             x => x.StationId == stationId && x.Status != PoleStatus.Inactive,
             cancellationToken);
 
+    public async Task DeactivateAllByStationIdAsync(int stationId, CancellationToken cancellationToken)
+    {
+        await _context.Poles
+            .Where(p => p.StationId == stationId && p.Status != PoleStatus.Inactive)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(p => p.Status, PoleStatus.Inactive)
+                .SetProperty(p => p.UpdatedAt, DateTime.UtcNow),
+            cancellationToken);
+    }
+
     public Task AddAsync(Pole pole, CancellationToken cancellationToken)
         => _context.Poles.AddAsync(pole, cancellationToken).AsTask();
 

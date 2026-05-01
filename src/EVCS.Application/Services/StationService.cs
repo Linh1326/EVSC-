@@ -120,6 +120,9 @@ public sealed class StationService : IStationService
         station.Status = StationStatus.Inactive;
         station.UpdatedAt = DateTime.UtcNow;
 
+        // Auto-deactivate all poles in this station
+        await _poleRepository.DeactivateAllByStationIdAsync(id, cancellationToken);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return await GetByIdAsync(id, cancellationToken);
     }
