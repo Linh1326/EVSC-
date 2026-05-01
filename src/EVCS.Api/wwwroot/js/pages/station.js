@@ -1403,13 +1403,16 @@ function bindEvents() {
       const lonRaw = els.createLongitude.value.trim().replace(",", ".");
       const address = els.createAddress.value.trim();
       const operationTime = els.createOperationTime.value.trim() || "24/7";
-      const status = els.createStatus.value;
-      const selectedPolePreset = selectedPoleValues[0] || (els.createPoleList ? els.createPoleList.value : "");
-      const poleCountFromPreset = /^pole-(\d+)$/i.exec(selectedPolePreset || "");
-      const poleCount = poleCountFromPreset ? Number(poleCountFromPreset[1]) : 0;
+      const status = els.createStatusSelect ? els.createStatusSelect.value : (els.createStatus.value || "Active");
+      if (els.createStatus) els.createStatus.value = status;
+
+      // Number of poles from dropdown (optional - default 1)
+      const poleCount = els.createNumberOfPoles && els.createNumberOfPoles.value
+        ? Number(els.createNumberOfPoles.value)
+        : 1;
       const polePresetKey = `pole-${Math.min(3, Math.max(1, poleCount))}`;
 
-      if (!name || !latRaw || !lonRaw || !address || !poleCount || !status) {
+      if (!name || !latRaw || !lonRaw || !address || !status) {
         showCreateError("Please fill in all required information.");
         return;
       }

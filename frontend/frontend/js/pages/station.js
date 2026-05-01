@@ -382,15 +382,6 @@ function openCreateStationDrawerLegacy1(station = null) {
   updateCreateStatusToggle();
   renderPoleChips();
 
-  if (!station && els.createPoleList) els.createPoleList.value = "";
-  updateCreateStatusToggle();
-  renderPoleChips();
-
-  if (!station && els.createPoleList) els.createPoleList.value = "";
-  updateCreateStatusToggle();
-  renderPoleChips();
-  if (els.createPoleList) els.createPoleList.value = "";
-
   if (els.stationActionView) els.stationActionView.classList.add("is-hidden");
   els.createBackdrop.classList.add("is-open");
   els.createPanel.classList.add("is-open");
@@ -1412,13 +1403,16 @@ function bindEvents() {
       const lonRaw = els.createLongitude.value.trim().replace(",", ".");
       const address = els.createAddress.value.trim();
       const operationTime = els.createOperationTime.value.trim() || "24/7";
-      const status = els.createStatus.value;
-      const selectedPolePreset = selectedPoleValues[0] || (els.createPoleList ? els.createPoleList.value : "");
-      const poleCountFromPreset = /^pole-(\d+)$/i.exec(selectedPolePreset || "");
-      const poleCount = poleCountFromPreset ? Number(poleCountFromPreset[1]) : 0;
+      const status = els.createStatusSelect ? els.createStatusSelect.value : (els.createStatus.value || "Active");
+      if (els.createStatus) els.createStatus.value = status;
+
+      // Number of poles from dropdown (optional - default 1)
+      const poleCount = els.createNumberOfPoles && els.createNumberOfPoles.value
+        ? Number(els.createNumberOfPoles.value)
+        : 1;
       const polePresetKey = `pole-${Math.min(3, Math.max(1, poleCount))}`;
 
-      if (!name || !latRaw || !lonRaw || !address || !poleCount || !status) {
+      if (!name || !latRaw || !lonRaw || !address || !status) {
         showCreateError("Please fill in all required information.");
         return;
       }
@@ -2120,7 +2114,7 @@ function openHistoryDatePopover(field) {
   if (!els.historyDatePopover) return;
   historyDatePickerState.activeField = field;
   historyDatePickerState.working = field === "from" ? (els.historyDateFrom ? els.historyDateFrom.value : "") : (els.historyDateTo ? els.historyDateTo.value : "");
-  const seed = historyDatePickerState.working ? new Date(`${historyDatePickerState.working}T00:00:00`) : new Date("2026-04-01T00:00:00");
+  const seed = historyDatePickerState.working ? new Date(`${historyDatePickerState.working}T00:00:00`) : new Date();
   historyDatePickerState.view = new Date(seed.getFullYear(), seed.getMonth(), 1);
   renderHistoryDatePicker();
   els.historyDatePopover.classList.add("is-open");
