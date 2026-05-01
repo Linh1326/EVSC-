@@ -722,7 +722,9 @@ async function savePoleForm(event) {
   const payload = {
     id: els.poleFormId ? els.poleFormId.value : nextPoleId(),
     name: els.poleFormName ? els.poleFormName.value.trim() : "",
-    activeCode: els.poleFormActiveCode ? els.poleFormActiveCode.value.trim() : "",
+    activeCode: els.poleFormActiveCode
+      ? els.poleFormActiveCode.value.trim()
+      : (state.isEditMode ? getPoleById(state.editingPoleId)?.activeCode ?? "" : ""),
     manufacturer: els.poleFormManufacturer ? els.poleFormManufacturer.value.trim() : "",
     model: els.poleFormModel ? els.poleFormModel.value.trim() : "",
     stationId: els.poleFormStation && !els.poleFormStation.disabled
