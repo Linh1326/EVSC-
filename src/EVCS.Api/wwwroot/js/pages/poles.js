@@ -725,7 +725,9 @@ async function savePoleForm(event) {
     activeCode: els.poleFormActiveCode ? els.poleFormActiveCode.value.trim() : "",
     manufacturer: els.poleFormManufacturer ? els.poleFormManufacturer.value.trim() : "",
     model: els.poleFormModel ? els.poleFormModel.value.trim() : "",
-    stationId: els.poleFormStation ? els.poleFormStation.value.trim() : "",
+    stationId: els.poleFormStation && !els.poleFormStation.disabled
+      ? els.poleFormStation.value.trim()
+      : (state.isEditMode ? getPoleById(state.editingPoleId)?.stationId ?? "" : ""),
     installedAt: els.poleFormInstalledAt ? els.poleFormInstalledAt.value.trim() : "",
     status: els.poleFormStatus ? els.poleFormStatus.value : "Active",
     connectors: (els.poleFormConnectorList ? els.poleFormConnectorList.value : "")
