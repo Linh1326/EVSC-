@@ -343,7 +343,7 @@ function getStatusMeta(status) {
       };
     default:
       return {
-        label: "Open",
+        label: "Unresolved",
         className: "bg-slate-200 text-slate-700"
       };
   }
