@@ -638,6 +638,9 @@ function openPoleForm(pole = null) {
   // Hide Active Code field when editing (TC: active code should not be editable)
   const activeCodeField = document.getElementById("poleFormActiveCodeField");
   if (activeCodeField) activeCodeField.style.display = pole ? "none" : "";
+
+  // Disable station dropdown when editing
+  if (els.poleFormStation) els.poleFormStation.disabled = !!pole;
   if (els.poleFormMetaId) els.poleFormMetaId.textContent = `ID: ${draftId}`;
   if (els.poleFormMetaDate) els.poleFormMetaDate.textContent = formatDrawerMetaDate(new Date());
   if (els.poleFormId) els.poleFormId.value = draftId;
