@@ -11,12 +11,18 @@ public sealed class StationService : IStationService
 {
     private readonly IStationRepository _stationRepository;
     private readonly IPoleRepository _poleRepository;
+    private readonly IChargingSessionRepository _sessionRepository;
     private readonly IUnitOfWork _unitOfWork;
 
-    public StationService(IStationRepository stationRepository, IPoleRepository poleRepository, IUnitOfWork unitOfWork)
+    public StationService(
+        IStationRepository stationRepository,
+        IPoleRepository poleRepository,
+        IChargingSessionRepository sessionRepository,
+        IUnitOfWork unitOfWork)
     {
         _stationRepository = stationRepository;
         _poleRepository = poleRepository;
+        _sessionRepository = sessionRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -29,18 +35,18 @@ public sealed class StationService : IStationService
     public async Task<StationDetailDto> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
         var station = await _stationRepository.GetByIdAsync(id, includeChildren: true, cancellationToken)
-            ?? throw new AppException("Kh�ng t�m th?y tr?m s?c.", 404);
+            ?? throw new AppException("Station not found.", 404);
         return MapDetail(station);
     }
 
     public async Task<StationDetailDto> CreateAsync(CreateStationRequest request, CancellationToken cancellationToken)
     {
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Name, "T�n tr?m s?c kh�ng du?c d? tr?ng.");
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Code, "M� tr?m kh�ng du?c d? tr?ng.");
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Address, "�?a ch? kh�ng du?c d? tr?ng.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Name, "Station name is required.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Code, "Station code is required.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Address, "Address is required.");
 
         var existed = await _stationRepository.ExistsByNameAsync(request.Name.Trim(), null, cancellationToken);
-        ValidationGuard.Against(existed, "T�n tr?m s?c d� t?n t?i.");
+        ValidationGuard.Against(existed, "Station name already exists.");
 
         var station = new Station
         {
@@ -64,13 +70,13 @@ public sealed class StationService : IStationService
     public async Task<StationDetailDto> UpdateAsync(int id, UpdateStationRequest request, CancellationToken cancellationToken)
     {
         var station = await _stationRepository.GetByIdAsync(id, includeChildren: true, cancellationToken)
-            ?? throw new AppException("Kh�ng t�m th?y tr?m s?c.", 404);
+            ?? throw new AppException("Station not found.", 404);
 
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Name, "T�n tr?m s?c kh�ng du?c d? tr?ng.");
-        ValidationGuard.AgainstNullOrWhiteSpace(request.Address, "�?a ch? kh�ng du?c d? tr?ng.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Name, "Station name is required.");
+        ValidationGuard.AgainstNullOrWhiteSpace(request.Address, "Address is required.");
 
         var existed = await _stationRepository.ExistsByNameAsync(request.Name.Trim(), id, cancellationToken);
-        ValidationGuard.Against(existed, "T�n tr?m s?c d� t?n t?i.");
+        ValidationGuard.Against(existed, "Station information already exists. Please try again.");
 
         station.Name = request.Name.Trim();
         station.Address = request.Address.Trim();
@@ -88,15 +94,15 @@ public sealed class StationService : IStationService
     public async Task DeleteAsync(int id, CancellationToken cancellationToken)
     {
         var station = await _stationRepository.GetByIdAsync(id, includeChildren: false, cancellationToken)
-            ?? throw new AppException("Không tìm thấy trạm sạc.", 404);
+            ?? throw new AppException("Station not found.", 404);
 
-        // Cannot delete station that is currently active
-        if (station.Status == StationStatus.Active)
-            throw new AppException("Không thể xóa trạm đang hoạt động. Vui lòng ngưng hoạt động trước.", 400);
+        // TC1.29: Cannot delete station with ongoing charging session
+        var hasOngoing = await _sessionRepository.HasOngoingSessionByStationAsync(id, cancellationToken);
+        ValidationGuard.Against(hasOngoing, "Cannot delete a station with an ongoing charging session.");
 
         // Cannot delete station with active poles
         var hasActivePole = await _poleRepository.ExistsActiveByStationIdAsync(id, cancellationToken);
-        ValidationGuard.Against(hasActivePole, "Không thể xóa trạm đang có trụ hoạt động.");
+        ValidationGuard.Against(hasActivePole, "Cannot delete a station with active poles.");
 
         _stationRepository.Remove(station);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -105,7 +111,11 @@ public sealed class StationService : IStationService
     public async Task<StationDetailDto> DeactivateAsync(int id, CancellationToken cancellationToken)
     {
         var station = await _stationRepository.GetByIdAsync(id, includeChildren: false, cancellationToken)
-            ?? throw new AppException("Kh�ng t�m th?y tr?m s?c.", 404);
+            ?? throw new AppException("Station not found.", 404);
+
+        // TC1.36: Cannot deactivate station with ongoing charging session
+        var hasOngoing = await _sessionRepository.HasOngoingSessionByStationAsync(id, cancellationToken);
+        ValidationGuard.Against(hasOngoing, "Cannot deactivate a station with an ongoing charging session.");
 
         station.Status = StationStatus.Inactive;
         station.UpdatedAt = DateTime.UtcNow;
@@ -117,7 +127,7 @@ public sealed class StationService : IStationService
     public async Task<StationDetailDto> ActivateAsync(int id, CancellationToken cancellationToken)
     {
         var station = await _stationRepository.GetByIdAsync(id, includeChildren: false, cancellationToken)
-            ?? throw new AppException("Kh�ng t�m th?y tr?m s?c.", 404);
+            ?? throw new AppException("Station not found.", 404);
 
         station.Status = StationStatus.Active;
         station.UpdatedAt = DateTime.UtcNow;
