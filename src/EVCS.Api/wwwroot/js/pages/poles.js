@@ -636,8 +636,7 @@ function openPoleForm(pole = null) {
   if (els.savePoleFormBtn) els.savePoleFormBtn.textContent = pole ? "Update" : "Save";
 
   // Hide Active Code field when editing (TC: active code should not be editable)
-  const activeCodeField = document.getElementById("poleFormActiveCodeField");
-  if (activeCodeField) activeCodeField.style.display = pole ? "none" : "";
+  // Active Code field removed from form entirely
 
   // Disable station dropdown when editing
   if (els.poleFormStation) els.poleFormStation.disabled = !!pole;
