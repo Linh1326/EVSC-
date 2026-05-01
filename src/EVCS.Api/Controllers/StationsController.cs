@@ -231,7 +231,7 @@ public class StationsController : ControllerBase
         updatedAt = s.UpdatedAt?.ToString("o"),
         connectors = s.Poles.Select(p => new
         {
-            name = $"{p.Name} - {p.Code}",
+            name = $"{p.Code} - {p.Name}",
             status = p.Status switch
             {
                 PoleStatus.Available => "Available",
