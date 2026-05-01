@@ -686,6 +686,18 @@
       border-color: #fed7aa;
     }
 
+    .history-session-status--cancelled {
+      background: #fff7ed;
+      color: #b45309;
+      border-color: #fed7aa;
+    }
+
+    .history-session-status--ongoing {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+    }
+
     .history-session-status--failed {
       background: #fef2f2;
       color: #b91c1c;
@@ -1305,17 +1317,17 @@
           <div class="history-filters__grid">
             <div class="history-field">
               <label for="historyDateFrom">From Date</label>
-              <input id="historyDateFrom" type="hidden" value="2026-03-01">
+              <input id="historyDateFrom" type="hidden" value="">
               <button type="button" id="historyDateFromTrigger" class="history-date-trigger" aria-haspopup="dialog" aria-expanded="false">
-                <span id="historyDateFromText" class="history-date-trigger__text">Mar 01, 2026</span>
+                <span id="historyDateFromText" class="history-date-trigger__text">Select date</span>
                 <span class="history-date-trigger__icon" aria-hidden="true">▾</span>
               </button>
             </div>
             <div class="history-field">
               <label for="historyDateTo">To Date</label>
-              <input id="historyDateTo" type="hidden" value="2026-04-01">
+              <input id="historyDateTo" type="hidden" value="">
               <button type="button" id="historyDateToTrigger" class="history-date-trigger" aria-haspopup="dialog" aria-expanded="false">
-                <span id="historyDateToText" class="history-date-trigger__text">Apr 01, 2026</span>
+                <span id="historyDateToText" class="history-date-trigger__text">Select date</span>
                 <span class="history-date-trigger__icon" aria-hidden="true">▾</span>
               </button>
             </div>
@@ -1460,9 +1472,6 @@
           <div class="create-select-wrap">
             <select id="createPoleList" name="poleList" class="create-field__select" required>
               <option value="">Select Pole</option>
-              <option value="pole-1">Pole 1 — 1 connector</option>
-              <option value="pole-2">Pole 2 — 2 connectors</option>
-              <option value="pole-3">Pole 3 — 3 connectors</option>
             </select>
           </div>
           <div id="createPoleChips" class="create-pole-chips is-hidden" aria-live="polite"></div>
