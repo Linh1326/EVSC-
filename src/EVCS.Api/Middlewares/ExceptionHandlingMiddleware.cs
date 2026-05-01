@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using EVCS.Api.Contracts;
 using EVCS.Application.Common;
 
@@ -8,6 +9,12 @@ public sealed class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
+
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Converters = { new JsonStringEnumConverter() }
+    };
 
     public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
     {
@@ -27,8 +34,8 @@ public sealed class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Lỗi không mong muốn khi xử lý yêu cầu.");
-            await WriteErrorAsync(context, StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "Unexpected error while processing request.");
+            await WriteErrorAsync(context, StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
         }
     }
 
@@ -37,7 +44,7 @@ public sealed class ExceptionHandlingMiddleware
         context.Response.StatusCode = statusCode;
         context.Response.ContentType = "application/json";
 
-        var payload = JsonSerializer.Serialize(ApiResponse<object>.Fail(message));
+        var payload = JsonSerializer.Serialize(ApiResponse<object>.Fail(message), _jsonOptions);
         await context.Response.WriteAsync(payload);
     }
 }
