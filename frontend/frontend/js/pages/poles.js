@@ -686,8 +686,23 @@ function closePoleForm() {
 
 async function savePoleForm(event) {
   event.preventDefault();
+
+  // TC2.06: Prevent double-submit
+  if (els.savePoleFormBtn && els.savePoleFormBtn.disabled) return;
+  if (els.savePoleFormBtn) {
+    els.savePoleFormBtn.disabled = true;
+    els.savePoleFormBtn.textContent = "Saving...";
+  }
+
   const wasEditMode = state.isEditMode;
   const editingPoleId = state.editingPoleId;
+
+  const restoreBtn = () => {
+    if (els.savePoleFormBtn) {
+      els.savePoleFormBtn.disabled = false;
+      els.savePoleFormBtn.textContent = wasEditMode ? "Update" : "Save";
+    }
+  };
 
   const payload = {
     id: els.poleFormId ? els.poleFormId.value : nextPoleId(),
@@ -711,18 +726,18 @@ async function savePoleForm(event) {
   // Default to 1 connector if none provided
   if (!payload.connectors.length) payload.connectors = ["Connector 1 / Available"];
 
-  // TC2.18: Detailed field validation
-  if (!payload.name) { showFormError("Pole Name is required."); return; }
-  if (payload.name.length > 100) { showFormError("Pole Name must not exceed 100 characters."); return; }
-  if (!payload.manufacturer) { showFormError("Manufacturer is required."); return; }
-  if (!payload.model) { showFormError("Model is required."); return; }
-  if (!payload.stationId) { showFormError("Station is required."); return; }
-  if (!payload.installedAt) { showFormError("Installed date is required."); return; }
+  // TC2.18: Validate special characters - only allow letters, numbers, spaces, hyphens, underscores, parentheses
+  const specialCharRegex = /[.,"/@#$%^&*!?;:<>{}[\]\\|+=~`]/;
 
-  if (!payload.name || !payload.manufacturer || !payload.model || !payload.stationId || !payload.installedAt) {
-    showFormError("Please fill in all required fields.");
-    return;
-  }
+  if (!payload.name) { showFormError("Pole Name is required."); restoreBtn(); return; }
+  if (payload.name.length > 100) { showFormError("Pole Name must not exceed 100 characters."); restoreBtn(); return; }
+  if (specialCharRegex.test(payload.name)) { showFormError("Pole Name must not contain special characters (. , \" / @ # etc.)."); restoreBtn(); return; }
+  if (!payload.manufacturer) { showFormError("Manufacturer is required."); restoreBtn(); return; }
+  if (specialCharRegex.test(payload.manufacturer)) { showFormError("Manufacturer must not contain special characters."); restoreBtn(); return; }
+  if (!payload.model) { showFormError("Model is required."); restoreBtn(); return; }
+  if (specialCharRegex.test(payload.model)) { showFormError("Model must not contain special characters."); restoreBtn(); return; }
+  if (!payload.stationId) { showFormError("Station is required."); restoreBtn(); return; }
+  if (!payload.installedAt) { showFormError("Installed date is required."); restoreBtn(); return; }
 
   if (state.useApi) {
     try {
@@ -749,6 +764,7 @@ async function savePoleForm(event) {
       return;
     } catch (error) {
       showFormError(error.message || "Unable to save pole.");
+      restoreBtn();
       return;
     }
   }
