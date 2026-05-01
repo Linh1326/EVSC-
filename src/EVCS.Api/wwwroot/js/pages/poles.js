@@ -702,6 +702,8 @@ async function savePoleForm(event) {
     const existing = getPoleById(state.editingPoleId);
     if (existing?.connectors?.length) payload.connectors = [...existing.connectors];
   }
+  // Default to 1 connector if none provided
+  if (!payload.connectors.length) payload.connectors = ["Connector 1 / Available"];
 
   // TC2.18: Detailed field validation
   if (!payload.name) { showFormError("Pole Name is required."); return; }
@@ -710,9 +712,8 @@ async function savePoleForm(event) {
   if (!payload.model) { showFormError("Model is required."); return; }
   if (!payload.stationId) { showFormError("Station is required."); return; }
   if (!payload.installedAt) { showFormError("Installed date is required."); return; }
-  if (!payload.connectors.length) { showFormError("Connector list is required."); return; }
 
-  if (!payload.name || !payload.manufacturer || !payload.model || !payload.stationId || !payload.installedAt || !payload.connectors.length) {
+  if (!payload.name || !payload.manufacturer || !payload.model || !payload.stationId || !payload.installedAt) {
     showFormError("Please fill in all required fields.");
     return;
   }
