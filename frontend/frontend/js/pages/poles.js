@@ -638,8 +638,23 @@ function openPoleForm(pole = null) {
   // Hide Active Code field when editing (TC: active code should not be editable)
   // Active Code field removed from form entirely
 
-  // Disable station dropdown when editing
-  if (els.poleFormStation) els.poleFormStation.disabled = !!pole;
+  // Disable station dropdown when editing — show readonly text instead
+  if (els.poleFormStation) {
+    els.poleFormStation.disabled = !!pole;
+    els.poleFormStation.style.display = pole ? "none" : "";
+  }
+  const stationDisplay = document.getElementById("poleFormStationDisplay");
+  if (stationDisplay) {
+    if (pole) {
+      stationDisplay.style.display = "";
+      stationDisplay.value = `${pole.stationId} - ${pole.station}`;
+      stationDisplay.style.background = "#f3f4f6";
+      stationDisplay.style.color = "#6b7280";
+      stationDisplay.style.cursor = "not-allowed";
+    } else {
+      stationDisplay.style.display = "none";
+    }
+  }
   if (els.poleFormMetaId) els.poleFormMetaId.textContent = `ID: ${draftId}`;
   if (els.poleFormMetaDate) els.poleFormMetaDate.textContent = formatDrawerMetaDate(new Date());
   if (els.poleFormId) els.poleFormId.value = draftId;
