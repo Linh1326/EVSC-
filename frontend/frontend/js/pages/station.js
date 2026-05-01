@@ -1412,7 +1412,7 @@ function bindEvents() {
         : 1;
       const polePresetKey = `pole-${Math.min(3, Math.max(1, poleCount))}`;
 
-      if (!name || !latRaw || !lonRaw || !address || !status) {
+      if (!name || !latRaw || !lonRaw || !address) {
         showCreateError("Please fill in all required information.");
         return;
       }
