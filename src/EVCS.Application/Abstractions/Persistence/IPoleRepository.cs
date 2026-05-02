@@ -12,6 +12,7 @@ public interface IPoleRepository
     Task<bool> ExistsByCodeAsync(string code, int? excludeId, CancellationToken cancellationToken);
     Task<bool> ExistsActiveByStationIdAsync(int stationId, CancellationToken cancellationToken);
     Task DeactivateAllByStationIdAsync(int stationId, CancellationToken cancellationToken);
+    Task DeleteAllByStationIdAsync(int stationId, CancellationToken cancellationToken);
     Task AddAsync(Pole pole, CancellationToken cancellationToken);
     void Remove(Pole pole);
 }

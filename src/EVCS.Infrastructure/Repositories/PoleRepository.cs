@@ -75,6 +75,13 @@ public sealed class PoleRepository : IPoleRepository
             cancellationToken);
     }
 
+    public async Task DeleteAllByStationIdAsync(int stationId, CancellationToken cancellationToken)
+    {
+        await _context.Poles
+            .Where(p => p.StationId == stationId)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
     public Task AddAsync(Pole pole, CancellationToken cancellationToken)
         => _context.Poles.AddAsync(pole, cancellationToken).AsTask();
 

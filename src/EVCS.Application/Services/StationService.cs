@@ -104,10 +104,12 @@ public sealed class StationService : IStationService
         var hasActivePole = await _poleRepository.ExistsActiveByStationIdAsync(id, cancellationToken);
         ValidationGuard.Against(hasActivePole, "Cannot delete a station with active poles.");
 
+        // Delete all inactive poles first to avoid FK constraint
+        await _poleRepository.DeleteAllByStationIdAsync(id, cancellationToken);
+
         _stationRepository.Remove(station);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
-
     public async Task<StationDetailDto> DeactivateAsync(int id, CancellationToken cancellationToken)
     {
         var station = await _stationRepository.GetByIdAsync(id, includeChildren: false, cancellationToken)
