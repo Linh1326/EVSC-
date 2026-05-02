@@ -498,7 +498,6 @@ function renderTable(resetPage = false) {
         <tr class="${selectedClass.trim()}" data-pole-row="${pole.id}">
           <td><a href="#" class="pole-id-link station-id" data-action="view" data-pole-id="${pole.id}">${pole.id}</a></td>
           <td>${pole.name}</td>
-          <td>${pole.activeCode}</td>
           <td>${pole.manufacturer}</td>
           <td class="pole-installed-at">
             <span class="pole-installed-at__date">${installedAt.dateLine}</span>
