@@ -998,9 +998,16 @@ async function init() {
   if (typeof seedAlertsIfNeeded === "function") seedAlertsIfNeeded();
   await refreshStations();
   await refreshPolesFromApi();
+  if (typeof refreshAlertsFromApi === "function") await refreshAlertsFromApi();
   bindEvents();
   updateNotificationBadge();
   renderTable();
+
+  // Auto-refresh badge every 30s
+  setInterval(async () => {
+    if (typeof refreshAlertsFromApi === "function") await refreshAlertsFromApi();
+    updateNotificationBadge();
+  }, 30000);
 }
 
 void init().catch((error) => {

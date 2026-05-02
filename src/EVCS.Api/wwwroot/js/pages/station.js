@@ -2560,6 +2560,8 @@ async function init() {
     stations = loadStationsFromStorage();
     filteredStations = [...stations];
   }
+  // Refresh alerts from API so badge is always up-to-date across all browsers
+  await refreshAlertsFromApi();
   syncPoleOptionLabels();
   setStatusFilter(currentStatusFilter);
   bindEvents();
@@ -2568,6 +2570,12 @@ async function init() {
   updateNotificationBadge();
   initCoordCalendar();
   bindHistoryEvents();
+
+  // Auto-refresh badge every 30s
+  setInterval(async () => {
+    await refreshAlertsFromApi();
+    updateNotificationBadge();
+  }, 30000);
   syncStationSecondaryNav("station");
   updateSearchClearVisibility();
   window.addEventListener("resize", () => {

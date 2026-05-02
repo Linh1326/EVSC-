@@ -543,12 +543,18 @@ function bindEvents() {
 async function initMonitor() {
   initNotifToggle();
   initBackToSourceButton();
+  if (typeof refreshAlertsFromApi === "function") await refreshAlertsFromApi();
   updateNotificationBadge();
   bindEvents();
   await fetchMonitorOverview();
   window.setInterval(() => {
     void fetchMonitorOverview();
   }, REFRESH_MS);
+  // Auto-refresh badge every 30s
+  setInterval(async () => {
+    if (typeof refreshAlertsFromApi === "function") await refreshAlertsFromApi();
+    updateNotificationBadge();
+  }, 30000);
 }
 
 if (document.readyState === "loading") {
