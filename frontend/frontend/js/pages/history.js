@@ -559,45 +559,120 @@ function exportHistoryData(type) {
     }
 
     if (type === "xlsx") {
-      // XLSX: tạo SpreadsheetML XML hợp lệ, không cần thư viện ngoài
-      function escXml(v) {
+      // XLSX: tạo file OOXML .xlsx thực sự bằng JSZip (local, không cần CDN)
+      if (typeof JSZip === "undefined") {
+        throw new Error("JSZip not loaded");
+      }
+
+      function esc(v) {
         return String(v == null ? "" : v)
           .replace(/&/g, "&amp;")
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;");
       }
-      const allRows = [header, ...rows];
-      const xmlRows = allRows.map((row) =>
-        "<Row>" +
-        row.map((cell) => `<Cell><Data ss:Type="String">${escXml(cell)}</Data></Cell>`).join("") +
-        "</Row>"
-      ).join("");
-      const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-  <Styles>
-    <Style ss:ID="header">
-      <Font ss:Bold="1"/>
-      <Interior ss:Color="#1F8F46" ss:Pattern="Solid"/>
-      <Font ss:Color="#FFFFFF" ss:Bold="1"/>
-    </Style>
-  </Styles>
-  <Worksheet ss:Name="History">
-    <Table>${xmlRows}</Table>
-  </Worksheet>
-</Workbook>`;
-      const blob = new Blob([xml], { type: "application/vnd.ms-excel;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "station-history.xls";
-      link.click();
-      if (els.historyExportFeedback) {
-        els.historyExportFeedback.innerHTML = `Export completed successfully. File <strong>station-history.xls</strong> đã được tải về.`;
-        els.historyExportFeedback.classList.add("is-visible");
+
+      // Shared strings table
+      const stringTable = [];
+      const stringIndex = {};
+      function si(val) {
+        const s = String(val == null ? "" : val);
+        if (stringIndex[s] === undefined) {
+          stringIndex[s] = stringTable.length;
+          stringTable.push(s);
+        }
+        return stringIndex[s];
       }
+
+      const allRows = [header, ...rows];
+      // Pre-register all strings
+      allRows.forEach((row) => row.forEach((cell) => si(cell)));
+
+      // worksheet/sheet1.xml
+      const colLetter = (n) => {
+        let s = "";
+        let x = n + 1;
+        while (x > 0) { s = String.fromCharCode(64 + (x % 26 || 26)) + s; x = Math.floor((x - 1) / 26); }
+        return s;
+      };
+      const sheetRows = allRows.map((row, ri) =>
+        `<row r="${ri + 1}">` +
+        row.map((cell, ci) =>
+          `<c r="${colLetter(ci)}${ri + 1}" t="s"><v>${si(cell)}</v></c>`
+        ).join("") +
+        `</row>`
+      ).join("");
+
+      const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <sheetData>${sheetRows}</sheetData>
+</worksheet>`;
+
+      // xl/sharedStrings.xml
+      const ssXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${stringTable.length}" uniqueCount="${stringTable.length}">
+${stringTable.map((s) => `<si><t xml:space="preserve">${esc(s)}</t></si>`).join("")}
+</sst>`;
+
+      // xl/workbook.xml
+      const wbXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+          xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>
+    <sheet name="History" sheetId="1" r:id="rId1"/>
+  </sheets>
+</workbook>`;
+
+      // xl/_rels/workbook.xml.rels
+      const wbRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>
+</Relationships>`;
+
+      // _rels/.rels
+      const rootRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+
+      // [Content_Types].xml
+      const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
+</Types>`;
+
+      const zip = new JSZip();
+      zip.file("[Content_Types].xml", contentTypes);
+      zip.file("_rels/.rels", rootRels);
+      zip.file("xl/workbook.xml", wbXml);
+      zip.file("xl/_rels/workbook.xml.rels", wbRels);
+      zip.file("xl/worksheets/sheet1.xml", sheetXml);
+      zip.file("xl/sharedStrings.xml", ssXml);
+
+      zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+        .then((blob) => {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "station-history.xlsx";
+          link.click();
+          if (els.historyExportFeedback) {
+            els.historyExportFeedback.innerHTML = `Export completed successfully. File <strong>station-history.xlsx</strong> đã được tải về.`;
+            els.historyExportFeedback.classList.add("is-visible");
+          }
+        })
+        .catch((err) => {
+          console.error("XLSX zip error:", err);
+          if (els.historyExportFeedback) {
+            els.historyExportFeedback.textContent = "Unable to export XLSX. Please try again.";
+            els.historyExportFeedback.classList.add("is-visible");
+          }
+        });
       return;
     }
 
