@@ -559,17 +559,43 @@ function exportHistoryData(type) {
     }
 
     if (type === "xlsx") {
-      // XLSX: dùng SheetJS để tạo file Excel thực sự
-      if (typeof XLSX === "undefined") {
-        throw new Error("SheetJS library not loaded");
+      // XLSX: tạo SpreadsheetML XML hợp lệ, không cần thư viện ngoài
+      function escXml(v) {
+        return String(v == null ? "" : v)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
       }
-      const wsData = [header, ...rows];
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "History");
-      XLSX.writeFile(wb, "station-history.xlsx");
+      const allRows = [header, ...rows];
+      const xmlRows = allRows.map((row) =>
+        "<Row>" +
+        row.map((cell) => `<Cell><Data ss:Type="String">${escXml(cell)}</Data></Cell>`).join("") +
+        "</Row>"
+      ).join("");
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Styles>
+    <Style ss:ID="header">
+      <Font ss:Bold="1"/>
+      <Interior ss:Color="#1F8F46" ss:Pattern="Solid"/>
+      <Font ss:Color="#FFFFFF" ss:Bold="1"/>
+    </Style>
+  </Styles>
+  <Worksheet ss:Name="History">
+    <Table>${xmlRows}</Table>
+  </Worksheet>
+</Workbook>`;
+      const blob = new Blob([xml], { type: "application/vnd.ms-excel;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "station-history.xls";
+      link.click();
       if (els.historyExportFeedback) {
-        els.historyExportFeedback.innerHTML = `Export completed successfully. File <strong>station-history.xlsx</strong> đã được tải về.`;
+        els.historyExportFeedback.innerHTML = `Export completed successfully. File <strong>station-history.xls</strong> đã được tải về.`;
         els.historyExportFeedback.classList.add("is-visible");
       }
       return;
