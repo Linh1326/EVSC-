@@ -538,24 +538,70 @@ function exportHistoryData(type) {
       formatHistoryDateTime(item.end),
       item.kwh.toFixed(1),
       `${item.duration} min`,
-      item.cost.toFixed(1),
+      item.cost != null ? item.cost.toLocaleString("vi-VN") + " ₫" : "—",
       formatHistoryStatus(item.status),
     ]);
-    const separator = type === "csv" ? "," : "\t";
-    const content = [header, ...rows].map((row) => row.join(separator)).join("\n");
-    const mime = type === "csv" ? "text/csv" : "text/plain";
-    const blob = new Blob([content], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `station-history.${type}`;
-    link.click();
 
-    if (els.historyExportFeedback) {
-      els.historyExportFeedback.innerHTML = `Export completed successfully. <a href="${url}" download="station-history.${type}">Download file</a>`;
-      els.historyExportFeedback.classList.add("is-visible");
+    if (type === "csv") {
+      // CSV: giữ nguyên logic cũ
+      const content = [header, ...rows].map((row) => row.join(",")).join("\n");
+      const blob = new Blob([content], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "station-history.csv";
+      link.click();
+      if (els.historyExportFeedback) {
+        els.historyExportFeedback.innerHTML = `Export completed successfully. <a href="${url}" download="station-history.csv">Download file</a>`;
+        els.historyExportFeedback.classList.add("is-visible");
+      }
+      return;
     }
-  } catch {
+
+    if (type === "xlsx") {
+      // XLSX: dùng SheetJS để tạo file Excel thực sự
+      if (typeof XLSX === "undefined") {
+        throw new Error("SheetJS library not loaded");
+      }
+      const wsData = [header, ...rows];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "History");
+      XLSX.writeFile(wb, "station-history.xlsx");
+      if (els.historyExportFeedback) {
+        els.historyExportFeedback.innerHTML = `Export completed successfully. File <strong>station-history.xlsx</strong> đã được tải về.`;
+        els.historyExportFeedback.classList.add("is-visible");
+      }
+      return;
+    }
+
+    if (type === "pdf") {
+      // PDF: dùng jsPDF + autoTable để tạo PDF hợp lệ
+      if (typeof window.jspdf === "undefined" || typeof window.jspdf.jsPDF === "undefined") {
+        throw new Error("jsPDF library not loaded");
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+      doc.setFontSize(14);
+      doc.text("Station Usage History", 40, 40);
+      doc.autoTable({
+        head: [header],
+        body: rows,
+        startY: 60,
+        styles: { fontSize: 8, cellPadding: 4 },
+        headStyles: { fillColor: [31, 143, 70], textColor: 255, fontStyle: "bold" },
+        alternateRowStyles: { fillColor: [240, 253, 244] },
+        margin: { left: 40, right: 40 },
+      });
+      doc.save("station-history.pdf");
+      if (els.historyExportFeedback) {
+        els.historyExportFeedback.innerHTML = `Export completed successfully. File <strong>station-history.pdf</strong> đã được tải về.`;
+        els.historyExportFeedback.classList.add("is-visible");
+      }
+      return;
+    }
+  } catch (err) {
+    console.error("Export error:", err);
     if (els.historyExportFeedback) {
       els.historyExportFeedback.textContent = "Unable to export data. Please try again.";
       els.historyExportFeedback.classList.add("is-visible");
